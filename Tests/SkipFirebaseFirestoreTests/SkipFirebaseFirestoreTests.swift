@@ -6,6 +6,7 @@ import Foundation
 
 import SkipFirebaseCore
 import SkipFirebaseFirestore
+private typealias FirestorePipelineExpression = Expression
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseFirestoreTests", category: "Tests")
 
@@ -200,6 +201,195 @@ let appName: String = "SkipFirebaseDemo"
         // test encodable API variants
         //try citiesRef.addDocument(from: ["dict": "value"])
         //try citiesRef.addDocument(from: ["array", "value"])
+
+        // Firestore Pipelines API parity. This block is intentionally not invoked; it keeps the
+        // public Pipeline surface compiling against FirebaseFirestore on Darwin and SkipFirebaseFirestore on Android.
+        let _: Firestore = Firestore.firestore(database: "(default)")
+        let pipelineSource: PipelineSource = db.pipeline()
+        let collectionPipeline: Pipeline = pipelineSource.collection("cities")
+        let _: Pipeline = pipelineSource.collection(colRef, forceIndex: "idx_cities")
+        let _: Pipeline = pipelineSource.collectionGroup("landmarks", forceIndex: "idx_landmarks")
+        let _: Pipeline = pipelineSource.database()
+        let _: Pipeline = pipelineSource.documents([docRef])
+        let _: Pipeline = pipelineSource.documents(["cities/BOS"])
+        let _: Pipeline = pipelineSource.create(from: colRef.whereField("name", isEqualTo: "Boston"))
+
+        let vector = VectorValue([1.0, 2.0, 3.0])
+        let _: VectorValue = FieldValue.vector([1.0, 2.0, 3.0])
+        let nameField = Field("name")
+        let scoreField = Field(FieldPath(["stats", "score"]))
+        let populationField = Field("population")
+        let condition: BooleanExpression = populationField.greaterThan(100)
+        let _: BooleanExpression = DocumentMatches("coffee")
+        let _: FirestorePipelineExpression = Constant.nil
+        let _: FirestorePipelineExpression = Constant(vector)
+        let _: FirestorePipelineExpression = Variable("cityName")
+        let _: FirestorePipelineExpression = CurrentDocument()
+        let _: FirestorePipelineExpression = Score()
+        let rawFunction = FunctionExpression(functionName: "add", args: [populationField, Constant(1)])
+        let _: FunctionExpression = FunctionExpression(functionName: "custom_function", args: [populationField], options: ["mode": "safe"])
+        let _: ArrayExpression = ArrayExpression([1, "two", populationField])
+        let _: MapExpression = MapExpression(["city": nameField, "population": populationField])
+        let _: ConditionalExpression = ConditionalExpression(condition, then: Constant("large"), else: Constant("small"))
+        let _: CurrentTimestamp = CurrentTimestamp()
+        let _: ErrorExpression = ErrorExpression("pipeline error")
+        let _: RandomExpression = RandomExpression()
+        let _: RandomExpression = rand()
+        let _: AliasedExpression = rawFunction.as("populationPlusOne")
+        let _: AggregateFunction = AggregateFunction(functionName: "sum", args: [populationField])
+        let countAll: AliasedAggregate = CountAll().as("count")
+        let _: Ordering = nameField.ascending()
+        let _: Ordering = scoreField.descending()
+        let _: DistanceMeasure = .cosine
+        let _: DistanceMeasure = .euclidean
+        let _: DistanceMeasure = .dotProduct
+        let _: TimeUnit = .day
+        let _: TimePart = .dayOfWeek
+        let _: TimeGranularity = .month
+        let _: FunctionExpression = populationField.round()
+        let _: FunctionExpression = populationField.sqrt()
+        let _: FunctionExpression = populationField.pow(2)
+        let _: FunctionExpression = populationField.ln()
+        let _: FunctionExpression = populationField.exp()
+        let _: FunctionExpression = populationField.trunc()
+        let _: FunctionExpression = populationField.truncToPrecision(2)
+        let _: FunctionExpression = populationField.add(1).subtract(1).multiply(2).divide(2).mod(2)
+        let _: FunctionExpression = Field("regions").arrayReverse()
+        let _: FunctionExpression = Field("regions").arrayConcat([ArrayExpression(["north"])])
+        let _: FunctionExpression = Field("regions").arrayConcat([["north", "south"]])
+        let _: BooleanExpression = Field("regions").arrayContains("north")
+        let containsAllExpressions: [FirestorePipelineExpression] = [Constant("north")]
+        let _: BooleanExpression = Field("regions").arrayContainsAll(containsAllExpressions)
+        let _: BooleanExpression = Field("regions").arrayContainsAny(["north", "south"])
+        let _: FunctionExpression = Field("regions").arrayLength()
+        let _: FunctionExpression = Field("regions").arrayFilter(alias: "region", filter: Variable("region").exists())
+        let _: FunctionExpression = Field("regions").arrayTransform(elementAlias: "region", transform: Variable("region"))
+        let _: FunctionExpression = Field("regions").arrayTransformWithIndex(elementAlias: "region", indexAlias: "index", transform: Variable("region"))
+        let _: FunctionExpression = Field("regions").arraySlice(offset: 1, length: 2)
+        let _: FunctionExpression = Field("regions").arrayFirst()
+        let _: FunctionExpression = Field("regions").arrayFirstN(2)
+        let _: FunctionExpression = Field("regions").arrayLast()
+        let _: FunctionExpression = Field("regions").arrayLastN(2)
+        let _: FunctionExpression = Field("regions").arrayGet(0)
+        let _: FunctionExpression = Field("regions").arrayIndexOf("north")
+        let _: FunctionExpression = Field("regions").arrayLastIndexOf("north")
+        let _: FunctionExpression = Field("regions").arrayIndexOfAll("north")
+        let _: FunctionExpression = Field("scores").arrayMaximum()
+        let _: FunctionExpression = Field("scores").arrayMinimum()
+        let _: FunctionExpression = Field("scores").arrayMaximumN(2)
+        let _: FunctionExpression = Field("scores").arrayMinimumN(2)
+        let _: BooleanExpression = nameField.equalAny(["Boston", "Cambridge"])
+        let notEqualExpressions: [FirestorePipelineExpression] = [Constant("Chicago")]
+        let _: BooleanExpression = nameField.notEqualAny(notEqualExpressions)
+        let _: BooleanExpression = nameField.isError()
+        let _: BooleanExpression = nameField.isAbsent()
+        let _: FunctionExpression = Field("regions").join(delimiter: ",")
+        let _: FunctionExpression = nameField.split(delimiter: " ")
+        let _: FunctionExpression = nameField.length()
+        let _: FunctionExpression = nameField.charLength()
+        let _: BooleanExpression = nameField.like("B%")
+        let _: BooleanExpression = nameField.regexContains("Bos")
+        let _: FunctionExpression = nameField.regexFind("Bos")
+        let _: FunctionExpression = nameField.regexFindAll("o")
+        let _: BooleanExpression = nameField.regexMatch(".*")
+        let _: BooleanExpression = nameField.stringContains("Bos")
+        let _: BooleanExpression = nameField.startsWith("Bo")
+        let _: BooleanExpression = nameField.endsWith("on")
+        let _: FunctionExpression = nameField.trim().ltrim().rtrim()
+        let _: FunctionExpression = nameField.stringRepeat(2)
+        let _: FunctionExpression = nameField.stringReplaceAll("B", with: "C")
+        let _: FunctionExpression = nameField.stringReplaceOne("B", with: "C")
+        let _: FunctionExpression = nameField.stringIndexOf("o")
+        let _: FunctionExpression = nameField.stringConcat([" ", Field("state")])
+        let _: FunctionExpression = nameField.reverse()
+        let _: FunctionExpression = nameField.stringReverse()
+        let _: FunctionExpression = nameField.byteLength()
+        let _: FunctionExpression = nameField.substring(position: 0, length: 2)
+        let _: FunctionExpression = CurrentDocument().getField("profile").mapGet("displayName")
+        let _: FunctionExpression = CurrentDocument().mapRemove("private")
+        let _: FunctionExpression = CurrentDocument().mapMerge([MapExpression(["active": true])])
+        #if SKIP
+        let _: FunctionExpression = CurrentDocument().mapSet("active", true, ["level", 1])
+        let _: FirestorePipelineExpression = switchOn(condition, Constant("large"), [Constant("small")])
+        #else
+        let _: FunctionExpression = CurrentDocument().mapSet("active", true, "level", 1)
+        let _: FirestorePipelineExpression = switchOn(condition, Constant("large"), Constant("small"))
+        #endif
+        let _: FunctionExpression = CurrentDocument().mapKeys()
+        let _: FunctionExpression = CurrentDocument().mapValues()
+        let _: FunctionExpression = CurrentDocument().mapEntries()
+        let _: FunctionExpression = Field("embedding").vectorLength()
+        let _: FunctionExpression = Field("embedding").cosineDistance([1.0, 2.0, 3.0])
+        let _: FunctionExpression = Field("embedding").dotProduct(vector)
+        let _: FunctionExpression = Field("embedding").euclideanDistance(Constant(vector))
+        let _: AggregateFunction = populationField.first()
+        let _: AggregateFunction = populationField.last()
+        let _: AggregateFunction = nameField.arrayAgg()
+        let _: AggregateFunction = nameField.arrayAggDistinct()
+        let _: FunctionExpression = populationField.logicalMaximum([100, Field("baseline")])
+        let minimumExpressions: [FirestorePipelineExpression] = [Field("floor")]
+        let _: FunctionExpression = populationField.logicalMinimum(minimumExpressions)
+        let _: FunctionExpression = populationField.unixMillisToTimestamp()
+        let _: FunctionExpression = CurrentTimestamp().timestampToUnixMillis()
+        let _: FunctionExpression = CurrentTimestamp().timestampTruncate(granularity: .day)
+        let _: FunctionExpression = CurrentTimestamp().timestampDiff(CurrentTimestamp(), .day)
+        let _: FunctionExpression = CurrentTimestamp().timestampExtract(part: .day)
+        let _: FunctionExpression = CurrentTimestamp().timestampAdd(1, .day)
+        let _: FunctionExpression = CurrentTimestamp().timestampSubtract(1, .day)
+        let _: FunctionExpression = CurrentDocument().documentId()
+        let _: FunctionExpression = CurrentDocument().collectionId()
+        let _: FunctionExpression = CurrentDocument().parent()
+        let _: FunctionExpression = nameField.ifError(Constant("fallback"))
+        let _: FunctionExpression = nameField.ifAbsent("fallback")
+        let _: FunctionExpression = nameField.ifNull("fallback")
+        let _: FunctionExpression = nameField.coalesce([Field("fallbackName")])
+        let _: FunctionExpression = nameField.concat(["-", Field("state")])
+        let _: FunctionExpression = nameField.type()
+        let _: BooleanExpression = nameField.isType("string")
+
+        let _: Pipeline = collectionPipeline.addFields([rawFunction.as("populationPlusOne")])
+        let _: Pipeline = collectionPipeline.removeFields([Field("private")])
+        let _: Pipeline = collectionPipeline.removeFields(["private"])
+        let _: Pipeline = collectionPipeline.select([nameField, rawFunction.as("populationPlusOne")])
+        let _: Pipeline = collectionPipeline.select(["name", "population"])
+        let _: Pipeline = collectionPipeline.where(condition)
+        let _: Pipeline = collectionPipeline.offset(1).limit(2)
+        let _: Pipeline = collectionPipeline.define([nameField.as("cityName")])
+        let _: Pipeline = collectionPipeline.distinct(["country"])
+        let _: Pipeline = collectionPipeline.distinct([Field("country")])
+        let _: Pipeline = collectionPipeline.aggregate([countAll])
+        let _: Pipeline = collectionPipeline.aggregate([populationField.sum().as("populationSum")], groups: [Field("country")])
+        let _: Pipeline = collectionPipeline.findNearest(field: Field("embedding"), vectorValue: vector, distanceMeasure: .cosine, limit: 5, distanceField: "distance")
+        let _: Pipeline = collectionPipeline.sort([populationField.descending()])
+        let _: Pipeline = collectionPipeline.replace(with: CurrentDocument())
+        let _: Pipeline = collectionPipeline.replace(with: "profile")
+        let _: Pipeline = collectionPipeline.sample(count: 5)
+        let _: Pipeline = collectionPipeline.sample(percentage: 0.25)
+        let _: Pipeline = collectionPipeline.search(query: DocumentMatches("coffee"), languageCode: "en", retrievalDepth: 10, sort: [Score().descending()], offset: 1, limit: 3, addFields: [Score().as("searchScore")])
+        let _: Pipeline = collectionPipeline.search(query: "coffee", languageCode: "en", retrievalDepth: 10, sort: [Score().descending()], offset: 1, limit: 3, addFields: [Score().as("searchScore")])
+        let _: Pipeline = collectionPipeline.union(with: pipelineSource.collection("towns"))
+        let _: Pipeline = collectionPipeline.unnest(Field("regions").as("region"), indexField: "regionIndex")
+        let _: Pipeline = collectionPipeline.rawStage(name: "limit", params: [1], options: ["debug": false])
+        let _: FirestorePipelineExpression = collectionPipeline.select([nameField]).toArrayExpression()
+        let _: FirestorePipelineExpression = collectionPipeline.aggregate([countAll]).toScalarExpression()
+
+        let subcollection = Subcollection("reviews")
+        let _: Pipeline = subcollection.aggregate([Field("rating").average().as("avgRating")])
+        let _: FirestorePipelineExpression = subcollection.select([Field("rating")]).toArrayExpression()
+
+        let pipelineSnapshot: Pipeline.Snapshot = try await collectionPipeline.limit(1).execute()
+        let _: Timestamp = pipelineSnapshot.executionTime
+        let _: [PipelineResult] = pipelineSnapshot.results
+        if let result = pipelineSnapshot.results.first {
+            let _: DocumentReference? = result.ref
+            let _: String? = result.id
+            let _: Timestamp? = result.createTime
+            let _: Timestamp? = result.updateTime
+            let _ = result.data
+            let _ = result.get("name")
+            let _ = result.get(FieldPath(["stats", "score"]))
+            let _ = result.get(nameField)
+        }
     }
 
     func testFirestore() async throws {
@@ -407,10 +597,172 @@ let appName: String = "SkipFirebaseDemo"
             XCTAssertTrue(snapshot.exists)
         }
     }
+
+    private func requireFirestorePipelinesLive() throws {
+        if ProcessInfo.processInfo.environment["SKIP_FIRESTORE_PIPELINES_LIVE"] != "1" {
+            throw XCTSkip("Set SKIP_FIRESTORE_PIPELINES_LIVE=1 to run Firestore Enterprise Pipeline execution tests.")
+        }
+    }
+
+    private func requireFirestorePipelinesVectorLive() throws {
+        if ProcessInfo.processInfo.environment["SKIP_FIRESTORE_PIPELINES_VECTOR_LIVE"] != "1" {
+            throw XCTSkip("Set SKIP_FIRESTORE_PIPELINES_VECTOR_LIVE=1 to run vector-indexed Pipeline tests.")
+        }
+    }
+
+    private func makePipelineLiveCollection(_ label: String) -> CollectionReference {
+        let timestamp = Int(Date.now.timeIntervalSince1970 * 1000)
+        return db.collection("pipeline_live_\(label)_\(timestamp)")
+    }
+
+    private func seedPipelineLiveCities(_ label: String) async throws -> CollectionReference {
+        let collection = makePipelineLiveCollection(label)
+        try await collection.document("BOS").setData([
+            "name": "Boston",
+            "country": "USA",
+            "capital": false,
+            "population": Int64(675000),
+            "regions": ["east_coast", "new_england"],
+            "private": "remove-me",
+            "embedding": FieldValue.vector([0.1, 0.2, 0.3])
+        ])
+        try await collection.document("SF").setData([
+            "name": "San Francisco",
+            "country": "USA",
+            "capital": false,
+            "population": Int64(860001),
+            "regions": ["west_coast", "norcal"],
+            "private": "remove-me",
+            "embedding": FieldValue.vector([0.2, 0.3, 0.4])
+        ])
+        try await collection.document("TOK").setData([
+            "name": "Tokyo",
+            "country": "Japan",
+            "capital": true,
+            "population": Int64(9000000),
+            "regions": ["kanto", "honshu"],
+            "private": "remove-me",
+            "embedding": FieldValue.vector([0.9, 0.1, 0.2])
+        ])
+        return collection
+    }
+
+    func testFirestorePipelineLiveCollectionStages() async throws {
+        try requireFirestorePipelinesLive()
+        let collection = try await seedPipelineLiveCities("stages")
+
+        let snapshot = try await db.pipeline()
+            .collection(collection)
+            .where(Field("population").greaterThan(Int64(600000)))
+            .addFields([Field("population").add(1).as("populationPlusOne")])
+            .removeFields(["private"])
+            .select([Field("name"), Field("country"), Field("populationPlusOne")])
+            .sort([Field("populationPlusOne").descending()])
+            .offset(0)
+            .limit(2)
+            .execute()
+
+        XCTAssertEqual(2, snapshot.results.count)
+        XCTAssertNotNil(snapshot.executionTime)
+        XCTAssertEqual("Tokyo", snapshot.results.first?.get("name") as? String)
+        XCTAssertNil(snapshot.results.first?.get("private"))
+        XCTAssertNotNil(snapshot.results.first?.get("populationPlusOne"))
+    }
+
+    func testFirestorePipelineLiveAggregateDistinctUnionUnnestAndSubqueries() async throws {
+        try requireFirestorePipelinesLive()
+        let first = try await seedPipelineLiveCities("shapeA")
+        let second = try await seedPipelineLiveCities("shapeB")
+        let source = db.pipeline()
+
+        let aggregate = try await source.collection(first)
+            .aggregate([CountAll().as("count"), Field("population").sum().as("populationSum")], groups: [Field("country")])
+            .execute()
+        XCTAssertGreaterThanOrEqual(aggregate.results.count, 2)
+        XCTAssertTrue(aggregate.results.contains { $0.get("country") as? String == "USA" })
+
+        let distinct = try await source.collection(first)
+            .distinct([Field("country")])
+            .execute()
+        XCTAssertGreaterThanOrEqual(distinct.results.count, 2)
+
+        let union = try await source.collection(first)
+            .select(["name"])
+            .union(with: source.collection(second).select(["name"]))
+            .execute()
+        XCTAssertGreaterThanOrEqual(union.results.count, 6)
+
+        let unnest = try await source.collection(first)
+            .unnest(Field("regions").as("region"), indexField: "regionIndex")
+            .select(["name", "region", "regionIndex"])
+            .limit(4)
+            .execute()
+        XCTAssertFalse(unnest.results.isEmpty)
+        XCTAssertNotNil(unnest.results.first?.get("region"))
+        XCTAssertNotNil(unnest.results.first?.get("regionIndex"))
+
+        let withSubqueries = try await source.collection(first)
+            .limit(1)
+            .addFields([
+                source.collection(first).aggregate([CountAll().as("count")]).toScalarExpression().as("totalCount"),
+                source.collection(first).select([Field("name")]).toArrayExpression().as("allCities")
+            ])
+            .execute()
+        XCTAssertEqual(1, withSubqueries.results.count)
+        XCTAssertNotNil(withSubqueries.results.first?.get("totalCount"))
+        XCTAssertNotNil(withSubqueries.results.first?.get("allCities"))
+    }
+
+    func testFirestorePipelineLiveVectorFindNearest() async throws {
+        try requireFirestorePipelinesLive()
+        try requireFirestorePipelinesVectorLive()
+        let collection = try await seedPipelineLiveCities("vector")
+
+        let snapshot = try await db.pipeline()
+            .collection(collection)
+            .findNearest(field: Field("embedding"), vectorValue: VectorValue([0.1, 0.2, 0.31]), distanceMeasure: .euclidean, limit: 2, distanceField: "distance")
+            .execute()
+
+        XCTAssertEqual(2, snapshot.results.count)
+        XCTAssertNotNil(snapshot.results.first?.get("distance"))
+        XCTAssertNotNil(snapshot.results.first?.get("embedding") as? VectorValue)
+    }
+
+    func testFirestorePipelineLiveValidationFailures() async throws {
+        try requireFirestorePipelinesLive()
+        let collection = try await seedPipelineLiveCities("failures")
+
+        do {
+            _ = try await db.pipeline()
+                .collection(collection)
+                .select([Field("name").as("duplicate"), Field("country").as("duplicate")])
+                .execute()
+            XCTFail("Duplicate Pipeline aliases should fail before execution.")
+        } catch {
+            let nsError = error as NSError
+            XCTAssertEqual(FirestoreErrorDomain, nsError.domain)
+            XCTAssertEqual(FirestoreErrorCode.invalidArgument.rawValue, nsError.code)
+        }
+
+        do {
+            _ = try await Subcollection("reviews").limit(1).execute()
+            XCTFail("Subcollection pipelines cannot execute directly.")
+        } catch {
+            XCTAssertEqual(FirestoreErrorDomain, (error as NSError).domain)
+        }
+
+        do {
+            let otherDb = Firestore.firestore(database: "other")
+            _ = try await db.pipeline().documents([otherDb.document("cities/BOS")]).execute()
+            XCTFail("Document references from another Firestore instance should fail.")
+        } catch {
+            XCTAssertEqual(FirestoreErrorDomain, (error as NSError).domain)
+        }
+    }
 }
 
 extension SkipFirebaseFirestoreTests {
-    nonisolated(unsafe) private static let bostonData: [String : Any] = [
+    private static let bostonData: [String : Any] = [
         "name": "Boston",
         "state": "MA",
         "country": "USA",
@@ -446,6 +798,7 @@ struct _MDate: Codable { var createdAt: Date }
 struct _MTimestamp: Codable { var ts: Timestamp }
 struct _MServerTimestamp: Codable { @ServerTimestamp var ts: Timestamp? }
 struct _MDocumentID: Codable { @DocumentID var id: String?; var name: String }
+struct _MVector: Codable { var embedding: VectorValue }
 
 @MainActor final class FirestoreCodecTests: XCTestCase {
 
@@ -478,6 +831,24 @@ struct _MDocumentID: Codable { @DocumentID var id: String?; var name: String }
         let result = try XCTUnwrap(out["ts"] as? Timestamp)
         XCTAssertEqual(result.seconds, 999)
         XCTAssertEqual(result.nanoseconds, 42)
+    }
+
+    func testFieldValueVectorCreatesVectorValue() {
+        let vector = FieldValue.vector([0.0, 1.5, 3.25])
+        XCTAssertEqual(vector, VectorValue([0.0, 1.5, 3.25]))
+    }
+
+    func testEncoderPreservesVectorValue() throws {
+        let vector = VectorValue([0.25, 1.5, 2.75])
+        let out = try FirestoreEncoder().encode(_MVector(embedding: vector))
+        let result = try XCTUnwrap(out["embedding"] as? VectorValue)
+        XCTAssertEqual(result, vector)
+    }
+
+    func testDecoderPreservesVectorValue() throws {
+        let vector = VectorValue([9.0, 8.0, 7.0])
+        let model: _MVector = try FirestoreDecoder().decode(from: ["embedding": vector])
+        XCTAssertEqual(model.embedding, vector)
     }
 
     func testEncoderServerTimestampNilBecomesFieldValue() throws {

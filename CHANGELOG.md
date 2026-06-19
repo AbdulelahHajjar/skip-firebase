@@ -1,3 +1,8 @@
+## Unreleased
+
+  - Add full Firestore Pipeline API parity for Skip/Android, including Pipeline sources, stages, expressions, result metadata, raw stages, subcollections, `VectorValue`, and `FieldValue.vector`.
+  - Add Firestore Pipeline compile-parity coverage and gated live Pipeline tests.
+
 ## 0.7.2
 
 Released 2025-03-04
@@ -153,4 +158,3 @@ Released 2024-01-05
   - Add docs
   - Add more Firestore API and tests
   - Update README.md
-
