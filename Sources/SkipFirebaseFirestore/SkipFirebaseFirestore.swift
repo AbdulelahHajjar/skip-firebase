@@ -1520,6 +1520,7 @@ fileprivate func pipelineArguments(_ first: Any, _ second: Any, _ third: Any, _ 
 }
 
 public protocol Selectable {
+    // SKIP @nobridge
     var pipelineSelectable: com.google.firebase.firestore.pipeline.Selectable { get }
     var pipelineExpression: Expression { get }
     var pipelineAlias: String { get }
@@ -2417,6 +2418,7 @@ public class Expression: KotlinConverting<com.google.firebase.firestore.pipeline
 public class BooleanExpression: Expression {
     public let booleanExpression: com.google.firebase.firestore.pipeline.BooleanExpression
 
+    // SKIP @nobridge
     public init(expression: com.google.firebase.firestore.pipeline.BooleanExpression) {
         self.booleanExpression = expression
         super.init(expression: expression)
@@ -2927,6 +2929,7 @@ public class Pipeline: KotlinConverting<com.google.firebase.firestore.Pipeline> 
         return next(pipeline.select(first, *rest))
     }
 
+    // SKIP @nobridge
     public func `where`(_ condition: BooleanExpression) -> Pipeline {
         next(pipeline.where(condition.booleanExpression))
     }
@@ -3127,6 +3130,7 @@ public final class PipelineResult: KotlinConverting<com.google.firebase.firestor
         firestoreDeepSwiftNullable(map: result.getData())
     }
 
+    // SKIP @nobridge
     @available(*, deprecated, message: "Use the null-preserving data property instead.")
     public func data() -> [String: Any] {
         var dict = [String: Any]()
@@ -3178,12 +3182,9 @@ public class FieldValue {
         return com.google.firebase.firestore.FieldValue.serverTimestamp()
     }
 
+    // A [Float] overload would share this method's JVM signature, so Android only takes [Double].
     public class func vector(_ array: [Double]) -> VectorValue {
         return VectorValue(array)
-    }
-
-    public class func vector(_ array: [Float]) -> VectorValue {
-        return VectorValue(array.map { Double($0) })
     }
 }
 
@@ -3412,6 +3413,31 @@ extension GeoPoint {
         let lat = try container.decode(Double.self, forKey: .latitude)
         let lng = try container.decode(Double.self, forKey: .longitude)
         self.init(latitude: lat, longitude: lng)
+    }
+}
+
+// Like GeoPoint, the generated VectorValue bridge class declares Codable without implementing it.
+extension VectorValue {
+    private enum CodingKeys: String, CodingKey {
+        case array = "__fvv_array__"
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(array, forKey: .array)
+    }
+
+    public convenience init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(try container.decode([Double].self, forKey: .array))
+    }
+}
+
+// The bridge generator cannot emit a member named `where`, so Pipeline.where(_:) is not bridged
+// and is provided here on top of the bridged whereCondition(_:).
+extension Pipeline {
+    public func `where`(_ condition: BooleanExpression) -> Pipeline {
+        whereCondition(condition)
     }
 }
 #endif
